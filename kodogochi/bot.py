@@ -11,6 +11,8 @@ import logging
 import re
 import secrets
 import sqlite3
+
+import httpx
 from datetime import timedelta
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
@@ -33,7 +35,7 @@ router = Router()
 ASK_NAME = "Как назовём питомца?"
 SETUP_TTL = timedelta(minutes=30)  # реальное время: настройка не ускоряется в демо
 LOGIN_RE = re.compile(r"^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$", re.I)
-REPO_RE = re.compile(r"(?:https?://github\.com/)?([\w.-]+)/([\w.-]+?)(?:\.git)?/?$")
+REPO_RE = re.compile(r"^(?:https?://)?(?:www\.)?(?:github\.com/)?([\w.-]+)/([\w.-]+?)(?:\.git)?(?:[/?#].*)?$")
 VIEW_TEXT = {"dead": "умер 🪦", "sleeping": "спит 😴", "sick": "болеет 🤒", "sad": "грустит 😔", "ok": "бодр 😊"}
 TIMEZONES = [("Новосибирск", "Asia/Novosibirsk"), ("Москва", "Europe/Moscow"),
              ("Екатеринбург", "Asia/Yekaterinburg"), ("Омск", "Asia/Omsk"),
@@ -289,9 +291,9 @@ async def private_hello(message: Message):
                          reply_markup=ReplyKeyboardRemove())
 
 
-@router.message(Setup.repo, F.chat.type == ChatType.PRIVATE)
+@router.message(Setup.repo, F.chat.type == ChatType.PRIVATE, ~F.text.startswith("/"))
 async def setup_repo(message: Message, state: FSMContext, ctx):
-    match = REPO_RE.search((message.text or "").strip())
+    match = REPO_RE.match((message.text or "").strip())
     if not match:
         await message.answer("Не понял. Пример: <code>octocat/hello-world</code>")
         return
@@ -299,8 +301,8 @@ async def setup_repo(message: Message, state: FSMContext, ctx):
     try:
         repo = await ctx.gh.repo(owner, name)
         workflows = await ctx.gh.workflows(owner, name)
-    except RateLimited:
-        await message.answer("GitHub временно ограничил запросы. Попробуйте через пару минут.")
+    except (RateLimited, httpx.HTTPError):
+        await message.answer("GitHub сейчас не отвечает или ограничил запросы. Попробуйте через пару минут.")
         return
     except GitHubError as exc:
         if exc.status == 404:
@@ -351,7 +353,7 @@ async def setup_tz_button(cb: CallbackQuery, state: FSMContext):
     await ask_consent(cb.message, state, cb.data.removeprefix("tz:"))
 
 
-@router.message(Setup.tz, F.chat.type == ChatType.PRIVATE)
+@router.message(Setup.tz, F.chat.type == ChatType.PRIVATE, ~F.text.startswith("/"))
 async def setup_tz_text(message: Message, state: FSMContext):
     try:
         ZoneInfo((message.text or "").strip())

@@ -9,6 +9,7 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 
+import httpx
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
@@ -22,7 +23,7 @@ from . import bot as bot_handlers
 from . import engine
 from .clock import GameClock, iso, utcnow
 from .db import Database
-from .github import GitHub, GitHubError, RateLimited
+from .github import GitHub, GitHubError
 from .notifier import Notifier
 from .rules import Rules
 from .settings import Settings, load_settings
@@ -85,7 +86,7 @@ async def sync_team(ctx: Ctx, chat_id: int, initial: bool = False) -> None:
     try:
         snap = await ctx.gh.snapshot(repo["owner"], repo["name"], repo["workflow_id"], repo["default_branch"],
                                      known_open)
-    except (GitHubError, RateLimited, OSError) as exc:
+    except (GitHubError, httpx.HTTPError, KeyError, TypeError) as exc:
         log.warning("sync failed for chat %s: %s", chat_id, exc)
         with ctx.db.tx() as c:  # таймеры ждут успешной сверки
             c.execute("UPDATE repository SET sync_ok = 0 WHERE chat_id = ?", (chat_id,))
@@ -93,7 +94,7 @@ async def sync_team(ctx: Ctx, chat_id: int, initial: bool = False) -> None:
     now = ctx.clock.now()
     with ctx.db.tx() as c:
         engine.apply_snapshot(c, chat_id, snap, ctx.clock, now, ctx.rules, initial)
-        engine.tick_team(c, chat_id, now, ctx.rules)
+        engine.tick_team(c, chat_id, now, ctx.rules, notify=not initial)
     ctx.wake_notifier()
 
 

@@ -86,7 +86,8 @@ def process_webhook(c: sqlite3.Connection, chat_id: int, event_id: int, ev: dict
 
     if kind == "push":
         if not ev["deleted"]:
-            c.execute("UPDATE repository SET last_push_at = ? WHERE chat_id = ?", (iso(ev["at"]), chat_id))
+            c.execute("UPDATE repository SET last_push_at = ? WHERE chat_id = ?"
+                      " AND (last_push_at IS NULL OR last_push_at < ?)", (iso(ev["at"]), chat_id, iso(ev["at"])))
         local = ev["at"].astimezone(ZoneInfo(team["tz"]))
         effects = R.apply_push(pet, ev["branch"], repo["default_branch"], ev["deleted"], ev["after"],
                                ev["pusher"], local, rules)
@@ -215,7 +216,7 @@ def apply_snapshot(c: sqlite3.Connection, chat_id: int, snap: Snapshot, clock: G
     c.execute("UPDATE repository SET sync_ok = 1, last_sync_at = ? WHERE chat_id = ?", (iso(now), chat_id))
 
 
-def tick_team(c: sqlite3.Connection, chat_id: int, now: datetime, rules: R.Rules) -> None:
+def tick_team(c: sqlite3.Connection, chat_id: int, now: datetime, rules: R.Rules, notify: bool = True) -> None:
     """Суточные ступени: здоровье, штрафы за PR, восстановление настроения, спячка."""
     repo = c.execute("SELECT last_push_at, connected_at FROM repository WHERE chat_id = ?",
                      (chat_id,)).fetchone()
@@ -228,7 +229,7 @@ def tick_team(c: sqlite3.Connection, chat_id: int, now: datetime, rules: R.Rules
     for pr in prs:
         save_pr(c, chat_id, pr, now)
     save_pet(c, chat_id, pet, now)
-    record(c, chat_id, effects, now)
+    record(c, chat_id, effects, now, notify=notify)
 
 
 def activate(c: sqlite3.Connection, chat_id: int, now: datetime) -> bool:

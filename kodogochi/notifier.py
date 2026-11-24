@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 from typing import Awaitable, Callable
 from zoneinfo import ZoneInfo
 
-from aiogram.exceptions import (TelegramBadRequest, TelegramForbiddenError, TelegramMigrateToChat,
+from aiogram.exceptions import (TelegramAPIError, TelegramBadRequest, TelegramForbiddenError, TelegramMigrateToChat,
                                 TelegramNetworkError, TelegramRetryAfter)
 
 from .clock import GameClock, iso, parse
@@ -157,7 +157,7 @@ class Notifier:
                 self._release(c, chat_id, local_date)
                 c.execute(f"UPDATE notification SET status = 'failed' WHERE id IN ({marks})", ids)
             return False
-        except (TelegramNetworkError, TimeoutError, OSError):
+        except (TelegramNetworkError, TelegramAPIError, TimeoutError, OSError):
             log.warning("chat %s: send outcome unknown", chat_id)
             with self.db.tx() as c:
                 c.execute(f"UPDATE notification SET status = 'uncertain' WHERE id IN ({marks})", ids)

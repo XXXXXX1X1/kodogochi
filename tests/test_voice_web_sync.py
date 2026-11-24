@@ -180,3 +180,31 @@ def test_old_commit_at_connection_does_not_put_pet_to_sleep(ctx):
 
 def test_page_badge_image_uses_absolute_path(client):
     assert 'src="/p/slug1001/badge.svg"' in client.get("/p/slug1001").text
+
+
+def test_repo_input_parsing():
+    from kodogochi.bot import REPO_RE
+    for text, want in [("team/project", ("team", "project")),
+                       ("https://github.com/team/project", ("team", "project")),
+                       ("https://github.com/team/project/tree/main", ("team", "project")),
+                       ("github.com/team/project.git", ("team", "project"))]:
+        assert REPO_RE.match(text).groups() == want
+
+
+def test_initial_import_does_not_notify_old_overdue_pr(ctx):
+    prs = [PRInfo(4, "alice", False, START - timedelta(days=5))]
+    with ctx.db.tx() as c:
+        engine.apply_snapshot(c, CHAT, Snapshot([], prs, START), ctx.clock, ctx.clock.now(), ctx.rules, True)
+        engine.tick_team(c, CHAT, ctx.clock.now(), ctx.rules, notify=False)
+    assert ctx.db.one("SELECT COUNT(*) n FROM notification")["n"] == 0
+    ctx.clock.advance(days=1)
+    with ctx.db.tx() as c:
+        engine.tick_team(c, CHAT, ctx.clock.now(), ctx.rules)
+    assert ctx.db.one("SELECT COUNT(*) n FROM notification")["n"] == 0  # обращение по этому PR уже учтено
+
+
+def test_late_old_push_does_not_rewind_sleep_timer(client, ctx):
+    from .conftest import post_event, push
+    post_event(client, "push", push(after="1" * 40, pushed_at=int(START.timestamp())))
+    post_event(client, "push", push(after="2" * 40, pushed_at=int((START - timedelta(days=6)).timestamp())))
+    assert ctx.db.one("SELECT last_push_at FROM repository WHERE chat_id = ?", CHAT)["last_push_at"].startswith("2026-11-23")
