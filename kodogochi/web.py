@@ -80,7 +80,7 @@ async def pet_page(request: Request, slug: str, page: str = "1"):
     view = pet_view(pet)
     url = f"{ctx.settings.public_url}/p/{slug}"
     return templates.TemplateResponse(request, "pet.html", {
-        "name": team["name"], "view": view, "title": VIEW_TITLE[view], "pet": pet,
+        "name": team["name"], "slug": slug, "view": view, "title": VIEW_TITLE[view], "pet": pet,
         "art": Markup(pet_svg(view, 200)),
         "events": [{"time": fmt_time(r["occurred_at"], team["tz"]), "label": r["safe_label"],
                     "icon": KIND_ICON.get(r["kind"], "•")} for r in rows[:PAGE_SIZE]],

@@ -176,3 +176,7 @@ def test_old_commit_at_connection_does_not_put_pet_to_sleep(ctx):
     with ctx.db.tx() as c:
         engine.tick_team(c, CHAT, ctx.clock.now(), ctx.rules)
     assert load_pet(ctx.db.conn, CHAT).sleeping
+
+
+def test_page_badge_image_uses_absolute_path(client):
+    assert 'src="/p/slug1001/badge.svg"' in client.get("/p/slug1001").text
