@@ -1,0 +1,11 @@
+kodogochi.jarvis-nsk.online {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		-Server
+	}
+	request_body {
+		max_size 3MB
+	}
+	reverse_proxy kodogochi:8000
+}

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block head %}
+<style>
+  .hero h1 { font-size:38px; } .lead { font-size:19px; }
+  .row { display:flex; flex-wrap:wrap; gap:14px; justify-content:center; margin:18px 0 6px; }
+  .row figure { margin:0; text-align:center; font-weight:700; font-size:14px; }
+  ol li { margin:6px 0; }
+</style>
+{% endblock %}
+{% block body %}
+<section class="card hero">
+  <h1>Тамагочи, который болеет от ваших багов</h1>
+  <p class="lead">Почините сборку — он выздоровеет. Кодогочи живёт в Telegram-чате команды и следит за репозиторием GitHub:
+  упала сборка — заболел, PR третий день без ревью — грустит и зовёт команду. Не больше 5 сообщений в сутки и тишина ночью.</p>
+  <div class="row">{% for v, svg in pets.items() %}<figure>{{ svg }}<figcaption>{{ titles[v] }}</figcaption></figure>{% endfor %}</div>
+</section>
+<section class="card">
+  <h2>Как завести за 3 минуты</h2>
+  <ol>
+    <li>Добавьте бота в чат команды{% if bot_username %} — <a href="https://t.me/{{ bot_username }}?startgroup=start">@{{ bot_username }}</a>{% endif %}.</li>
+    <li>Администратор пишет <code>/start</code> и придумывает имя питомцу.</li>
+    <li>В личном чате бот выдаст адрес и секрет webhook — вставьте их в Settings → Webhooks репозитория.</li>
+    <li>Участники пишут <code>/me логин-github</code>, чтобы питомец звал их по имени.</li>
+  </ol>
+</section>
+{% endblock %}

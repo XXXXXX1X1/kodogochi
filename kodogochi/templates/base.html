@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Кодогочи{% endblock %}</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐣</text></svg>">
+<style>
+  :root { --ink:#22223b; --muted:#6b6b80; --paper:#fbf7f0; --card:#ffffff; --line:#ece6da; --accent:#5b4bb7; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink);
+         font: 16px/1.5 ui-rounded, "SF Pro Rounded", "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif; }
+  a { color: var(--accent); }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 24px 16px 48px; }
+  header.top { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+  .logo { font-weight:800; font-size:20px; text-decoration:none; color:var(--ink); }
+  .card { background:var(--card); border:2px solid var(--ink); border-radius:22px; padding:22px;
+          box-shadow: 5px 5px 0 var(--ink); margin-bottom:22px; }
+  .muted { color: var(--muted); }
+  .demo { background:#fff3c4; border:2px dashed #c9a227; border-radius:14px; padding:8px 12px; margin-bottom:18px; font-size:14px; }
+  .btn { display:inline-block; background:var(--ink); color:#fff; text-decoration:none; border-radius:999px;
+         padding:10px 18px; font-weight:700; }
+  h1, h2 { line-height:1.2; margin:0 0 10px; }
+  h2 { font-size: 19px; }
+  code { background:#f3efe6; border-radius:6px; padding:2px 6px; font-size:13px; word-break:break-all; }
+  footer { text-align:center; font-size:13px; color:var(--muted); margin-top:28px; }
+</style>
+{% block head %}{% endblock %}
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="logo" href="/">🐣 Кодогочи</a>
+    {% if bot_username %}<a class="btn" href="https://t.me/{{ bot_username }}?startgroup=start">Завести своего</a>{% endif %}
+  </header>
+  {% if demo %}<div class="demo">Демо-режим: игровые сутки идут за 1 минуту, поэтому даты событий — игровые.</div>{% endif %}
+  {% block body %}{% endblock %}
+  <footer>Кодогочи — питомец команды, который болеет от проблем репозитория GitHub.</footer>
+</div>
+</body>
+</html>

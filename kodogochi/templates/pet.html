@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}{{ name }} · {{ title }} — Кодогочи{% endblock %}
+{% block head %}
+<style>
+  .hero { display:grid; grid-template-columns: 210px 1fr; gap:18px; align-items:center; }
+  .hero h1 { font-size:34px; }
+  .chip { display:inline-block; border:2px solid var(--ink); border-radius:999px; padding:2px 12px; font-weight:700;
+          font-size:14px; margin-bottom:12px; }
+  .chip.ok{background:#d8f5df}.chip.sad{background:#dde8f7}.chip.sick{background:#f1f4c9}.chip.sleeping{background:#e8e1fb}.chip.dead{background:#e6e6e6}
+  .meter { margin:10px 0; }
+  .meter .row { display:flex; justify-content:space-between; font-weight:700; font-size:15px; }
+  .bar { height:14px; border:2px solid var(--ink); border-radius:999px; background:#f3efe6; overflow:hidden; margin-top:4px; }
+  .bar > i { display:block; height:100%; border-radius:999px; }
+  ul.events, ul.helpers { list-style:none; margin:0; padding:0; }
+  ul.events li { display:grid; grid-template-columns: 28px 120px 1fr; gap:8px; padding:9px 0; border-bottom:1px solid var(--line); }
+  ul.events li:last-child, ul.helpers li:last-child { border-bottom:0; }
+  ul.events time { color:var(--muted); font-variant-numeric: tabular-nums; }
+  ul.helpers li { padding:7px 0; border-bottom:1px solid var(--line); }
+  .pager { margin-top:14px; display:flex; gap:12px; }
+  @media (max-width: 560px) {
+    .hero { grid-template-columns: 1fr; text-align:center; }
+    .hero svg { margin: 0 auto; }
+    ul.events li { grid-template-columns: 26px 1fr; }
+    ul.events li span.label { grid-column: 2; }
+  }
+</style>
+{% endblock %}
+{% block body %}
+<section class="card hero">
+  <div>{{ art }}</div>
+  <div>
+    <h1>{{ name }}</h1>
+    <span class="chip {{ view }}">{{ title }}</span>
+    <div class="meter"><div class="row"><span>Здоровье</span><span>{{ pet.health }}/100</span></div>
+      <div class="bar"><i style="width:{{ pet.health }}%;background:{% if pet.health >= 70 %}#57c76b{% elif pet.health >= 40 %}#e2b33d{% else %}#e5534b{% endif %}"></i></div></div>
+    <div class="meter"><div class="row"><span>Настроение</span><span>{{ pet.mood }}/100</span></div>
+      <div class="bar"><i style="width:{{ pet.mood }}%;background:#8f7ff0"></i></div></div>
+    {% if repo_url %}<div class="muted">Репозиторий: <a href="{{ repo_url }}">{{ repo_name }}</a></div>{% endif %}
+  </div>
+</section>
+
+<section class="card">
+  <h2>События за 14 дней</h2>
+  {% if events %}
+  <ul class="events">
+    {% for e in events %}<li><span>{{ e.icon }}</span><time>{{ e.time }}</time><span class="label">{{ e.label }}</span></li>{% endfor %}
+  </ul>
+  {% else %}<p class="muted">За последние 14 дней событий пока нет.</p>{% endif %}
+  <div class="pager">
+    {% if page > 1 %}<a href="?page={{ page - 1 }}">← Предыдущая страница</a>{% endif %}
+    {% if has_next %}<a href="?page={{ page + 1 }}">Следующая страница →</a>{% endif %}
+  </div>
+</section>
+
+<section class="card">
+  <h2>Кто лечил</h2>
+  {% if helpers %}
+  <ul class="helpers">{% for h in helpers %}<li><b>{{ h.alias }}</b> · {{ h.role }}{% if h.times > 1 %} ×{{ h.times }}{% endif %}</li>{% endfor %}</ul>
+  {% else %}<p class="muted">Пока никто не отображается. Участник попадает в список, если привязал GitHub командой /me и согласился на показ.</p>{% endif %}
+</section>
+
+<section class="card">
+  <h2>Бейдж для README</h2>
+  <p><img src="badge.svg" alt="бейдж {{ name }}" onerror="this.style.display='none'"></p>
+  <code>{{ badge_md }}</code>
+</section>
+{% endblock %}

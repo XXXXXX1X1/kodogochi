@@ -1,0 +1,36 @@
+name: kodogochi
+
+services:
+  app:
+    container_name: kodogochi
+    build: ../
+    image: kodogochi:latest
+    restart: unless-stopped
+    init: true
+    env_file:
+      - /opt/kodogochi/app.env
+    environment:
+      ANTHROPIC_KEY_FILE: /run/secrets/anthropic_key
+    group_add:
+      - "1000"   # группа файла с ключом Claude на сервере
+    volumes:
+      - kodogochi_data:/data
+      - /etc/claw-llm/anthropic-api-key:/run/secrets/anthropic_key:ro
+    networks:
+      ingress:
+        aliases:
+          - kodogochi
+    mem_limit: 256m
+    cpus: 0.5
+    logging:
+      options:
+        max-size: 5m
+        max-file: "3"
+
+volumes:
+  kodogochi_data:
+
+networks:
+  ingress:
+    name: cliproxy_default
+    external: true

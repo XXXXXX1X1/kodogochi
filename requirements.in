@@ -1,0 +1,7 @@
+fastapi
+uvicorn[standard]
+aiogram
+apscheduler<4
+jinja2
+httpx
+anthropic
