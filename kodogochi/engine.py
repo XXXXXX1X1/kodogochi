@@ -221,7 +221,9 @@ def tick_team(c: sqlite3.Connection, chat_id: int, now: datetime, rules: R.Rules
                      (chat_id,)).fetchone()
     pet = load_pet(c, chat_id)
     prs = load_open_prs(c, chat_id)
-    last_push = parse(repo["last_push_at"]) or parse(repo["connected_at"]) or now
+    # Спячка считается не раньше подключения: старые правки — история, а не повод уснуть сразу.
+    marks = [t for t in (parse(repo["last_push_at"]), parse(repo["connected_at"])) if t is not None]
+    last_push = max(marks) if marks else now
     effects = R.tick(pet, prs, last_push, now, rules)
     for pr in prs:
         save_pr(c, chat_id, pr, now)

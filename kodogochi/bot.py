@@ -20,7 +20,7 @@ from aiogram.filters import Command, CommandObject, CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import (CallbackQuery, ChatMemberUpdated, ForceReply, InlineKeyboardButton,
-                           InlineKeyboardMarkup, Message)
+                           InlineKeyboardMarkup, Message, ReplyKeyboardRemove)
 
 from .clock import iso, parse, utcnow
 from .db import load_pet, migrate_chat
@@ -267,7 +267,8 @@ async def private_start(message: Message, command: CommandObject, state: FSMCont
     team = ctx.db.one("SELECT * FROM team WHERE setup_token_hash = ? AND status = 'pending'",
                       token_hash(command.args))
     if team is None or parse(team["setup_expires_at"]) < utcnow():
-        await message.answer("Ссылка устарела или уже использована. Вызовите /start в чате команды ещё раз.")
+        await message.answer("Ссылка устарела или уже использована. Вызовите /start в чате команды ещё раз.",
+                             reply_markup=ReplyKeyboardRemove())
         return
     if team["owner_tg_id"] != message.from_user.id:
         await message.answer("Эта ссылка для администратора, который начал подключение.")
@@ -275,7 +276,8 @@ async def private_start(message: Message, command: CommandObject, state: FSMCont
     await state.set_state(Setup.repo)
     await state.update_data(chat_id=team["chat_id"], token=command.args)
     await message.answer(f"Настраиваем питомца <b>{html.escape(team['name'])}</b>.\n\n"
-                         "Шаг 1. Пришлите репозиторий: <code>owner/repo</code> или ссылку на GitHub.")
+                         "Шаг 1. Пришлите репозиторий: <code>owner/repo</code> или ссылку на GitHub.",
+                         reply_markup=ReplyKeyboardRemove())
 
 
 @router.message(CommandStart(), F.chat.type == ChatType.PRIVATE)
@@ -283,7 +285,8 @@ async def private_hello(message: Message):
     await message.answer("Я Кодогочи — питомец команды, который болеет от проблем репозитория GitHub. 🐣\n\n"
                          "1. Добавьте меня в групповой чат команды.\n"
                          "2. Администратор группы отправляет там /start.\n"
-                         "3. Я пришлю ссылку, по которой настройка продолжится здесь.")
+                         "3. Я пришлю ссылку, по которой настройка продолжится здесь.",
+                         reply_markup=ReplyKeyboardRemove())
 
 
 @router.message(Setup.repo, F.chat.type == ChatType.PRIVATE)

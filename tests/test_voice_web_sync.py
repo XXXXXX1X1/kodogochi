@@ -165,3 +165,14 @@ def test_migrate_to_supergroup_keeps_everything(client, ctx):
     assert ctx.db.one("SELECT COUNT(*) n FROM journal WHERE chat_id = -100999")["n"] == 1
     assert load_pet(ctx.db.conn, -100999).ci_state == "red"
     assert ctx.db.one("SELECT chat_id FROM repository")["chat_id"] == -100999
+
+
+def test_old_commit_at_connection_does_not_put_pet_to_sleep(ctx):
+    with ctx.db.tx() as c:
+        c.execute("UPDATE repository SET last_push_at = ?", ((START - timedelta(days=30)).isoformat(),))
+        engine.tick_team(c, CHAT, ctx.clock.now(), ctx.rules)
+    assert not load_pet(ctx.db.conn, CHAT).sleeping
+    ctx.clock.advance(days=7)
+    with ctx.db.tx() as c:
+        engine.tick_team(c, CHAT, ctx.clock.now(), ctx.rules)
+    assert load_pet(ctx.db.conn, CHAT).sleeping

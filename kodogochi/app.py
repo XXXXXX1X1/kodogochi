@@ -13,7 +13,8 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, LinkPreviewOptions
+from aiogram.types import (BotCommand, BotCommandScopeAllGroupChats, InlineKeyboardButton, InlineKeyboardMarkup,
+                           LinkPreviewOptions)
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import FastAPI
 
@@ -31,6 +32,10 @@ from .webhook import router as webhook_router
 
 log = logging.getLogger("kodogochi")
 RETENTION = timedelta(days=30)
+GROUP_COMMANDS = [BotCommand(command="pet", description="Как там питомец"),
+                  BotCommand(command="me", description="Привязать свой логин GitHub: /me логин"),
+                  BotCommand(command="start", description="Завести питомца (администратор)"),
+                  BotCommand(command="disable", description="Отключить питомца (администратор)")]
 
 
 @dataclass
@@ -187,6 +192,7 @@ def create_app(settings: Settings | None = None, ctx: Ctx | None = None, backgro
             if ctx.bot is not None:
                 me = await ctx.bot.get_me()
                 ctx.bot_username = me.username
+                await ctx.bot.set_my_commands(GROUP_COMMANDS, scope=BotCommandScopeAllGroupChats())
                 dp = Dispatcher(storage=MemoryStorage(), ctx=ctx)
                 dp.include_router(bot_handlers.router)
                 tasks.append(asyncio.create_task(dp.start_polling(ctx.bot, handle_signals=False)))
