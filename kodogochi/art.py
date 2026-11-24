@@ -12,7 +12,7 @@ def pet_svg(view: str, size: int = 160) -> str:
         "ok": '<circle cx="62" cy="74" r="7" fill="#222"/><circle cx="98" cy="74" r="7" fill="#222"/>'
               '<circle cx="64" cy="72" r="2.2" fill="#fff"/><circle cx="100" cy="72" r="2.2" fill="#fff"/>',
         "sad": '<circle cx="62" cy="78" r="6" fill="#222"/><circle cx="98" cy="78" r="6" fill="#222"/>'
-               '<path d="M52 66 L70 70 M108 66 L90 70" stroke="#222" stroke-width="3" stroke-linecap="round"/>'
+               '<path d="M52 70 L70 63 M108 70 L90 63" stroke="#222" stroke-width="3" stroke-linecap="round"/>'
                '<path d="M100 88 q4 8 0 12 q-4 -4 0 -12z" fill="#4aa3ff"/>',
         "sick": '<path d="M55 76 q7 -6 14 0 M91 76 q7 -6 14 0" stroke="#222" stroke-width="4" fill="none" stroke-linecap="round"/>',
         "sleeping": '<path d="M55 76 q7 6 14 0 M91 76 q7 6 14 0" stroke="#222" stroke-width="4" fill="none" stroke-linecap="round"/>',
